@@ -1,7 +1,7 @@
 import assert from 'assert';
 import {parseCode} from '../src/js/code-analyzer';
 import {getModel} from '../src/js/code-analyzer';
-import {getSubstitutionModel} from '../src/js/symbolicSubstitution';
+import {getSubstitutionModel,findPath,createGraph,Mydot} from '../src/js/graphCreationAndPathFinder';
 
 function compare(a,b) {
     if (a.line < b.line)
@@ -214,8 +214,6 @@ describe('The symbolic Substitution parser', () => {
         assert.equal(
             subModel[1].line, ' while ((x + 1) < z) { ' );
         assert.equal(
-            subModel[1].color, 0 );
-        assert.equal(
             subModel[2].line, ' z = ((x + 1) + ((x + 1) + y)) * 2; ' );
         assert.equal(
             subModel[2].color, 0 );
@@ -272,4 +270,112 @@ describe('The symbolic Substitution parser', () => {
             subModel[1].color, 2 );
     });
 
+});
+
+describe('The Graph that was created', () => {
+    it('can handle an empty function', () => {
+        var codeToParse = 'function foo(x, y, z){\n\n}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'1,2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(
+            dot,'digraph {  }');
+    });
+    it('can handle local vars and function correctly', () => {
+        var codeToParse = 'function foo(x, y, z){\n let a = 1; \n let b = a + y; \n let c = 0;\n return a;\n}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'1,2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(
+            dot,'digraph { n0 [label=\"-1-\nlet a = 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nreturn a; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\n }');
+    });
+    it('can handle array in input vector correctly', () => {
+        var codeToParse = 'function foo(x, y, z){\n let a = x[1]; \n let b = a + y; \n let c = x[2];\n return c;\n}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'[1,2,3],2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x[1];\nlet b = a + y;\nlet c = x[2]; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\n }');
+    });
+
+    it('can handle simple if correctly', () => {
+        var codeToParse = 'function foo(x){\n let a = 1; \n if(a>2){ \n a=5 \n }\n return a;}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'2',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na = 5 \" shape= \"box\" ]\nn3 [label=\"-4-\nreturn a; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n3 []\n }');
+    });
+
+    it('can handle simple substitution with global var from above ', () => {
+        var codeToParse = 'let a = 3;\n function foo(){\n if(a>2){\n if(a*2>7)\n {\n a++; \n }\n a--;\n }\n return a;\n}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn1 [label=\"-2-\na * 2 > 7 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na++ \" shape= \"box\" ]\nn3 [label=\"-4-\na-- \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn a; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 [label=\"true\"]\nn0 -> n4 [label=\"false\"]\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n3 []\nn3 -> n4 []\n }');
+    });
+
+    it('can handle simple substitution with global var from under ', () => {
+        var codeToParse = 'function foo(){\n if(a>2){\n if(a*2>7)\n {\n a++; \n }\n a--;\n }\n return a;\n}\nlet a = 3;';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn1 [label=\"-2-\na * 2 > 7 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na++ \" shape= \"box\" ]\nn3 [label=\"-4-\na-- \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn a; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 [label=\"true\"]\nn0 -> n4 [label=\"false\"]\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n3 []\nn3 -> n4 []\n }');
+    });
+    it('can handle complex if-and ifElse statements ', () => {
+        var codeToParse = 'function foo(x, y, z){ \n let a = x + 1; \n let b = a + y; \n let c = 0;\n if (b < z) { \n c = c + 5; \n } else if (b < z - 2) { \n c = c + x + 5;\n } else { \n c = c + z + 5; \n } \n return c; \n }';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'1,2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nb < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\nc = c + 5 \" shape= \"box\" ]\nn3 [label=\"-4-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nb < z - 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn5 [label=\"-6-\nc = c + x + 5 \" shape= \"box\" ]\nn6 [label=\"-7-\nc = c + z + 5 \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n4 [label=\"false\"]\nn2 -> n3 []\nn4 -> n5 [label=\"true\"]\nn4 -> n6 [label=\"false\"]\nn5 -> n3 []\nn6 -> n3 []\n }');
+    });
+    it('can handle simple while statements ', () => {
+        var codeToParse = 'function foo(x, y, z){ \n let a = x + 1; \n let b = a + y; \n let c = 0; \n while (a < z) { \n c = a + b; \n z = c * 2; \n } \n return z; \n }';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'1,2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\nc = a + b\nz = c * 2 \" shape= \"box\" ]\nn3 [label=\"-4-\nreturn z; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n1 []\n }');
+    });
+    it('can handle simple while statements with seperate bloxes of variables ', () => {
+        var codeToParse = 'function foo(x, y, z){\n let a = x + 1;\n let b = 0;\n let c = 0;\n a=1;\n a=8;\n while(a>2)\n {\n a--;\n }\n let h = 1;\n return c;\n}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'1,2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = 0;\nlet c = 0;\na = 1\na = 8 \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na-- \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n1 []\nn3 -> n4 []\n }');
+    });
+    it('can handle simple if statements with seperate bloxes of variables ', () => {
+        var codeToParse = 'function foo(x, y, z){\n let a = x + 1;\n let b = 0;\n let c = 0; \n if(a ==2)\n {\n a=9\n }\n c=1;\n let h = 1;\n return c;\n}';
+        parseCode(codeToParse);
+        let model = getModel();
+        model.sort(compare);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,'1,2,3',codeToParse);
+        let dot = Mydot(graph);
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = 0;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na == 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na = 9 \" shape= \"box\" ]\nn3 [label=\"-4-\nc = 1\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n3 []\nn3 -> n4 []\n }');
+    });
 });

@@ -1,2 +1,2 @@
 import './code-analyzer.test';
-import './symbolicSubstitution.test';
+import './graphCreationAndPathFinder.test';

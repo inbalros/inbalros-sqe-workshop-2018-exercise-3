@@ -1,7 +1,9 @@
+import Viz from 'viz.js';
 import $ from 'jquery';
 import {parseCode} from './code-analyzer';
 import {getModel} from './code-analyzer';
-import {getSubstitutionModel} from './symbolicSubstitution';
+import {findPath,createGraph,Mydot} from './graphCreationAndPathFinder';
+import { Module, render } from 'viz.js/full.render.js';
 
 $(document).ready(function () {
     $('#codeSubmissionButton').click(() => {
@@ -10,8 +12,10 @@ $(document).ready(function () {
         parseCode(codeToParse);
         let model = getModel();
         model.sort(compare);
-        let subModel = getSubstitutionModel(model,inputVector,codeToParse);
-        document.getElementById('tableWrapper').innerHTML = createTable(subModel);
+        let graph = createGraph(codeToParse);
+        graph = findPath(graph,model,inputVector,codeToParse);
+        document.getElementById('graphWrapper').innerHTML = '';
+        createGraphiclGraph(Mydot(graph));
     });
 });
 
@@ -22,18 +26,11 @@ function compare(a,b) {
         return 1;
 }
 
-function createTable(model)
-{
-    var inerHtmlTable ='<div><table  cellspacing="0" cellpadding="0">\n';
-    for (var i = 0; i < model.length; i++) {
-        var firstTag ='<td>';
-        if(model[i].color ==1) {
-            firstTag ='<td class="green">';}
-        else if(model[i].color ==2)        {
-            firstTag ='<td class="red">';}
-        inerHtmlTable += '<tr>';
-        inerHtmlTable += firstTag +model[i].line+'</td>';
-        inerHtmlTable += '</tr>\n';
-    }
-    return inerHtmlTable;
+function createGraphiclGraph(mydot){
+    var viz = new Viz({Module,render});
+    let wrapper = document.getElementById('graphWrapper');
+    viz.renderSVGElement(mydot)
+        .then(function(GraphiclGraph) {
+            wrapper.append(GraphiclGraph);
+        });
 }

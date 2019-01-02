@@ -1,15 +1,97 @@
 import {parseCode} from './code-analyzer';
 import {getModel} from './code-analyzer';
+import * as esprima from 'esprima';
+import * as escodegen from 'escodegen';
+const esgraph = require('esgraph');
 
 var allVariablesDic;
 var variableSubs;
-
 var localVariables;
 var inputVariables;
 var inputVectorVar;
-
 var expresionsDic;
 var programObject;
+
+
+const createGraph = (codeToParse) => {
+    let bodyEsprima =esprima.parseScript(codeToParse,{loc:true}).body;
+    let bodyFunction = null;
+    for (let i = 0;i<bodyEsprima.length;i++) {
+        if(bodyEsprima[i].type == 'FunctionDeclaration') {
+            bodyFunction = bodyEsprima[i].body;
+        }}
+    let graph = esgraph(bodyFunction)[2];
+    graph = graph.slice(1, graph.length - 1);
+    graph = prepareGraph(graph);
+    return graph;
+};
+
+function prepareGraph(graph){
+    for (let i = 0;i<graph.length;i++) {
+        graph[i].label = escodegen.generate(graph[i].astNode);
+    }
+    for (var i=0; i<graph.length; i++){
+        if (check(graph,i)){
+            let nextNode = graph[i].normal;
+            graph[i].normal = nextNode.normal;
+            graph[i].label += '\n' + nextNode.label;
+            let index = graph.indexOf(nextNode);
+            graph.splice(index, 1);
+            i--;
+        }}
+    addNumbers(graph);
+    return graph;
+}
+function check(graph,i) {
+    return (checknormals(graph,i) &&  checkExitAndLength(graph,i));
+}
+
+function checknormals(graph,i) {
+    return (graph[i].normal && graph[i].normal.normal);
+}
+
+function checkExitAndLength(graph,i) {
+    return (graph[i].normal.normal.type != 'exit' && graph[i].normal.prev.length === 1);
+}
+
+function addNumbers(graph) {
+    for (let i = 0;i<graph.length;i++) {
+        graph[i].label = '-'+ (i+1) +'-\n'+graph[i].label;
+    }
+}
+
+const shapesFromExpressions={
+    'IfStatement': 'diamond',
+    'WhileStatement': 'diamond',
+    'BlockStatement':'box'
+};
+
+//taken from the dot code itself
+function Mydot(nodes, options) {
+    options = options || {}; const { counter = 0 } = options; const output = []; output.push('digraph { ');
+    for (const [i, node] of nodes.entries()) {
+        let { label } = node;
+        output.push(`n${counter + i} [label="${label} "`);
+        if(node.inPath) {
+            output.push('style = filled fillcolor = green ');}
+        let shape = shapesFromExpressions[node.parent.type];
+        output.push(` shape= "${shape}" ]\n`);}
+    for (const [i, node] of nodes.entries()) {
+        continueCreateDot(node,nodes,output,counter,i);
+    }
+    output.push(' }');
+    return output.join('');
+}
+
+function continueCreateDot(node,nodes,output,counter,i) {
+    for (const type of ['normal', 'true', 'false']) {
+        const next = node[type];
+        if (!next) continue;
+        if( nodes.indexOf(next)!= -1) {
+            output.push(`n${counter + i} -> n${counter + nodes.indexOf(next)} [`);
+            if (['true', 'false'].includes(type)) output.push(`label="${type}"`);
+            output.push(']\n');}}
+}
 
 const getSubstitutionModel = (model,inputVector,program) => {
     allVariablesDic= [] ;localVariables =[];inputVariables=[];variableSubs= [] ;expresionsDic= [] ; programObject = null;inputVectorVar=[];
@@ -23,6 +105,50 @@ const getSubstitutionModel = (model,inputVector,program) => {
 
     return colored;
 };
+
+const findPath = (graph,model,inputVector,program) => {
+    let subs = getSubstitutionModel(model,inputVector,program); let current = graph[0];
+    if(!current){return graph;}
+    while (current.astNode.type != 'ReturnStatement') {current.inPath = true;
+        if(current.parent.type =='WhileStatement') {
+            current = handleWhileStatment(current,subs);
+        }
+        else if (current.normal) {current = current.normal;}
+        else {
+            current = handleBinaryExpression(current,subs);}
+    }
+    current.inPath = true;
+    return graph;
+};
+
+function handleWhileStatment(current,subs) {
+    if(current.been) {
+        current.been++;
+    }
+    else {
+        current.been=1;
+    }
+    let greenColor = isGreen(current,subs);
+    if (greenColor){current.true.inPath = true;
+        if(current.been<2) {current = current.true;}
+        else {current = current.false;}}
+    else {current = current.false;}
+    return current;
+}
+
+function handleBinaryExpression(current,subs) {
+    let greenColor = isGreen(current,subs);
+    if (greenColor){current = current.true;}
+    else{current = current.false;}
+    return current;
+}
+
+function isGreen(current,subs) {
+    let greenColor = false;
+    for (var i = 0; i < subs.length; i++) {
+        if (subs[i].index  == current.astNode.loc.start.line && subs[i].color == 1) {greenColor = true;}}
+    return greenColor;
+}
 
 function separateModeld(model) {
     for (var i = 0; i < model.length; i++) {
@@ -244,7 +370,7 @@ function colorSubProgram(SubsProg) {
     parseCode(codeToParse);
     let model = getModel();
     for (var i = 0; i < model.length; i++) {
-        if(oneCheckForcolorSubProgram(model,i)) {
+        if(oneCheckForcolorSubProgram(model,i)||model[i].type == 'WhileStatement') {
 
             SubsProg = helperFunction(model,i,SubsProg);
 
@@ -278,4 +404,4 @@ String.prototype.replaceAll = function(search, replacement) {
     });
 };
 
-export {getSubstitutionModel};
+export {getSubstitutionModel,findPath,createGraph,Mydot};
