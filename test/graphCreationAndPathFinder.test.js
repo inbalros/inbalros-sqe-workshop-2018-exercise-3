@@ -354,7 +354,7 @@ describe('The Graph that was created', () => {
         let model = getModel();
         model.sort(compare);
         let graph = createGraph(codeToParse);
-        graph = findPath(graph,model,'1,2,3',codeToParse);
+        graph = findPath(graph,model,'1,2,1',codeToParse);
         let dot = Mydot(graph);
         assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\nc = a + b\nz = c * 2 \" shape= \"box\" ]\nn3 [label=\"-4-\nreturn z; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n1 []\n }');
     });
@@ -364,7 +364,7 @@ describe('The Graph that was created', () => {
         let model = getModel();
         model.sort(compare);
         let graph = createGraph(codeToParse);
-        graph = findPath(graph,model,'1,2,3',codeToParse);
+        graph = findPath(graph,model,'1,2,1',codeToParse);
         let dot = Mydot(graph);
         assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = 0;\nlet c = 0;\na = 1\na = 8 \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na-- \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n1 []\nn3 -> n4 []\n }');
     });
