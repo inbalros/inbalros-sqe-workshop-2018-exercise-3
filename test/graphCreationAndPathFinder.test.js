@@ -374,7 +374,7 @@ describe('The Graph that was created', () => {
         let model = getModel();
         model.sort(compare);
         let graph = createGraph(codeToParse);
-        graph = findPath(graph,model,'1,2,3',codeToParse);
+        graph = findPath(graph,model,'3,2,3',codeToParse);
         let dot = Mydot(graph);
         assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = 0;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na == 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na = 9 \" shape= \"box\" ]\nn3 [label=\"-4-\nc = 1\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n3 []\nn3 -> n4 []\n }');
     });
