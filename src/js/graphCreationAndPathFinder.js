@@ -30,28 +30,8 @@ function prepareGraph(graph){
     for (let i = 0;i<graph.length;i++) {
         graph[i].label = escodegen.generate(graph[i].astNode);
     }
-    for (var i=0; i<graph.length; i++){
-        if (check(graph,i)){
-            let nextNode = graph[i].normal;
-            graph[i].normal = nextNode.normal;
-            graph[i].label += '\n' + nextNode.label;
-            let index = graph.indexOf(nextNode);
-            graph.splice(index, 1);
-            i--;
-        }}
     addNumbers(graph);
     return graph;
-}
-function check(graph,i) {
-    return (checknormals(graph,i) &&  checkExitAndLength(graph,i));
-}
-
-function checknormals(graph,i) {
-    return (graph[i].normal && graph[i].normal.normal);
-}
-
-function checkExitAndLength(graph,i) {
-    return (graph[i].normal.normal.type != 'exit' && graph[i].normal.prev.length === 1);
 }
 
 function addNumbers(graph) {

@@ -293,7 +293,7 @@ describe('The Graph that was created', () => {
         graph = findPath(graph,model,'1,2,3',codeToParse);
         let dot = Mydot(graph);
         assert.equal(
-            dot,'digraph { n0 [label=\"-1-\nlet a = 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nreturn a; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\n }');
+            dot,'digraph { n0 [label=\"-1-\nlet a = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nlet b = a + y; \"style = filled fillcolor = green  shape= \"box\" ]\nn2 [label=\"-3-\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\nreturn a; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 []\nn2 -> n3 []\n }');
     });
     it('can handle array in input vector correctly', () => {
         var codeToParse = 'function foo(x, y, z){\n let a = x[1]; \n let b = a + y; \n let c = x[2];\n return c;\n}';
@@ -303,7 +303,7 @@ describe('The Graph that was created', () => {
         let graph = createGraph(codeToParse);
         graph = findPath(graph,model,'[1,2,3],2,3',codeToParse);
         let dot = Mydot(graph);
-        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x[1];\nlet b = a + y;\nlet c = x[2]; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\n }');
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x[1]; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nlet b = a + y; \"style = filled fillcolor = green  shape= \"box\" ]\nn2 [label=\"-3-\nlet c = x[2]; \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 []\nn2 -> n3 []\n }');
     });
 
     it('can handle simple if correctly', () => {
@@ -346,7 +346,7 @@ describe('The Graph that was created', () => {
         let graph = createGraph(codeToParse);
         graph = findPath(graph,model,'1,2,3',codeToParse);
         let dot = Mydot(graph);
-        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nb < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\nc = c + 5 \" shape= \"box\" ]\nn3 [label=\"-4-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nb < z - 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn5 [label=\"-6-\nc = c + x + 5 \" shape= \"box\" ]\nn6 [label=\"-7-\nc = c + z + 5 \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n4 [label=\"false\"]\nn2 -> n3 []\nn4 -> n5 [label=\"true\"]\nn4 -> n6 [label=\"false\"]\nn5 -> n3 []\nn6 -> n3 []\n }');
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nlet b = a + y; \"style = filled fillcolor = green  shape= \"box\" ]\nn2 [label=\"-3-\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\nb < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn4 [label=\"-5-\nc = c + 5 \" shape= \"box\" ]\nn5 [label=\"-6-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn6 [label=\"-7-\nb < z - 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn7 [label=\"-8-\nc = c + x + 5 \" shape= \"box\" ]\nn8 [label=\"-9-\nc = c + z + 5 \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 []\nn2 -> n3 []\nn3 -> n4 [label=\"true\"]\nn3 -> n6 [label=\"false\"]\nn4 -> n5 []\nn6 -> n7 [label=\"true\"]\nn6 -> n8 [label=\"false\"]\nn7 -> n5 []\nn8 -> n5 []\n }');
     });
     it('can handle simple while statements ', () => {
         var codeToParse = 'function foo(x, y, z){ \n let a = x + 1; \n let b = a + y; \n let c = 0; \n while (a < z) { \n c = a + b; \n z = c * 2; \n } \n return z; \n }';
@@ -356,7 +356,7 @@ describe('The Graph that was created', () => {
         let graph = createGraph(codeToParse);
         graph = findPath(graph,model,'1,2,1',codeToParse);
         let dot = Mydot(graph);
-        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = a + y;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\nc = a + b\nz = c * 2 \" shape= \"box\" ]\nn3 [label=\"-4-\nreturn z; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n1 []\n }');
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nlet b = a + y; \"style = filled fillcolor = green  shape= \"box\" ]\nn2 [label=\"-3-\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\na < z \"style = filled fillcolor = green  shape= \"diamond\" ]\nn4 [label=\"-5-\nc = a + b \" shape= \"box\" ]\nn5 [label=\"-6-\nz = c * 2 \" shape= \"box\" ]\nn6 [label=\"-7-\nreturn z; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 []\nn2 -> n3 []\nn3 -> n4 [label=\"true\"]\nn3 -> n6 [label=\"false\"]\nn4 -> n5 []\nn5 -> n3 []\n }');
     });
     it('can handle simple while statements with seperate bloxes of variables ', () => {
         var codeToParse = 'function foo(x, y, z){\n let a = x + 1;\n let b = 0;\n let c = 0;\n a=1;\n a=8;\n while(a>2)\n {\n a--;\n }\n let h = 1;\n return c;\n}';
@@ -366,7 +366,7 @@ describe('The Graph that was created', () => {
         let graph = createGraph(codeToParse);
         graph = findPath(graph,model,'1,2,1',codeToParse);
         let dot = Mydot(graph);
-        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = 0;\nlet c = 0;\na = 1\na = 8 \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na-- \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n1 []\nn3 -> n4 []\n }');
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nlet b = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn2 [label=\"-3-\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\na = 1 \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\na = 8 \"style = filled fillcolor = green  shape= \"box\" ]\nn5 [label=\"-6-\na > 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn6 [label=\"-7-\na-- \"style = filled fillcolor = green  shape= \"box\" ]\nn7 [label=\"-8-\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn8 [label=\"-9-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 []\nn2 -> n3 []\nn3 -> n4 []\nn4 -> n5 []\nn5 -> n6 [label=\"true\"]\nn5 -> n7 [label=\"false\"]\nn6 -> n5 []\nn7 -> n8 []\n }');
     });
     it('can handle simple if statements with seperate bloxes of variables ', () => {
         var codeToParse = 'function foo(x, y, z){\n let a = x + 1;\n let b = 0;\n let c = 0; \n if(a ==2)\n {\n a=9\n }\n c=1;\n let h = 1;\n return c;\n}';
@@ -376,6 +376,6 @@ describe('The Graph that was created', () => {
         let graph = createGraph(codeToParse);
         graph = findPath(graph,model,'3,2,3',codeToParse);
         let dot = Mydot(graph);
-        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1;\nlet b = 0;\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\na == 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn2 [label=\"-3-\na = 9 \" shape= \"box\" ]\nn3 [label=\"-4-\nc = 1\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn4 [label=\"-5-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 [label=\"true\"]\nn1 -> n3 [label=\"false\"]\nn2 -> n3 []\nn3 -> n4 []\n }');
+        assert.equal(dot,'digraph { n0 [label=\"-1-\nlet a = x + 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn1 [label=\"-2-\nlet b = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn2 [label=\"-3-\nlet c = 0; \"style = filled fillcolor = green  shape= \"box\" ]\nn3 [label=\"-4-\na == 2 \"style = filled fillcolor = green  shape= \"diamond\" ]\nn4 [label=\"-5-\na = 9 \" shape= \"box\" ]\nn5 [label=\"-6-\nc = 1 \"style = filled fillcolor = green  shape= \"box\" ]\nn6 [label=\"-7-\nlet h = 1; \"style = filled fillcolor = green  shape= \"box\" ]\nn7 [label=\"-8-\nreturn c; \"style = filled fillcolor = green  shape= \"box\" ]\nn0 -> n1 []\nn1 -> n2 []\nn2 -> n3 []\nn3 -> n4 [label=\"true\"]\nn3 -> n5 [label=\"false\"]\nn4 -> n5 []\nn5 -> n6 []\nn6 -> n7 []\n }');
     });
 });
